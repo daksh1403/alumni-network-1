@@ -1,0 +1,9 @@
+{
+  "name": "alumni-network-worker",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test ../test/*.test.js",
+    "check": "node --check worker.js"
+  }
+}
