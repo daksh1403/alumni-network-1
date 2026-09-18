@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: alumni-sql-console
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: DATABASE_URL
+        value: postgresql://neondb_owner:npg_hn1ZvLi0wbtF@ep-restless-mouse-aetre6qx-pooler.c-2.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+      - key: HOST
+        value: 0.0.0.0
+      - key: PORT
+        value: 8000
+      - key: MAX_ROWS
+        value: 1000
+      - key: ALLOWED_ORIGIN
+        value: "*"

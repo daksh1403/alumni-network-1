@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Alumni Network — SQL Console</title>
+<meta name="description" content="Alumni Network & Engagement Platform — SQL console on SQLite. 14 relations, live queries, full DML support." />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div class="orb orb-a" aria-hidden="true"></div>
+<div class="orb orb-b" aria-hidden="true"></div>
+
+<nav>
+  <div class="nav-inner">
+    <a class="brand" href="#top">
+      <span class="brand-mark">alumni<span class="b-accent">.sql</span></span>
+      <span class="brand-sub" id="brandSub">SQLite</span>
+    </a>
+    <div class="nav-links">
+      <a href="#console">CONSOLE</a>
+      <a href="#pipeline">PIPELINE</a>
+      <a href="#schemaPanel">SCHEMA</a>
+    </div>
+    <div id="dbStatus" class="status-pill checking"><span class="dot"></span>Checking</div>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="hero-grid" aria-hidden="true"></div>
+  <div class="hero-inner">
+    <div class="hero-promptline rise"><span class="accent">$</span>&nbsp;<span id="typed"></span><span class="blink accent">▊</span></div>
+    <h1 class="rise rise-1"><span class="gradient">SQL</span> CONSOLE</h1>
+    <p class="hero-sub rise rise-2">ALUMNI NETWORK &amp; ENGAGEMENT PLATFORM</p>
+    <p class="hero-desc rise rise-2">A browser terminal connected to a live database — 14 relations, full DML support, every statement executed server-side.</p>
+    <div class="hero-ctas rise rise-3">
+      <a class="btn-solid" href="#console">OPEN CONSOLE →</a>
+      <a class="btn-ghost" href="#pipeline">SEE THE PIPELINE</a>
+    </div>
+    <div class="stats-grid rise rise-4">
+      <div class="stat"><div class="stat-label">ENGINE</div><div class="stat-value accent-text" id="engineText">…</div></div>
+      <div class="stat"><div class="stat-label">RELATIONS</div><div class="stat-value"><span class="counter" data-to="14">0</span></div></div>
+      <div class="stat"><div class="stat-label">SQL COMMANDS</div><div class="stat-value"><span class="counter" data-to="150">0</span>+</div></div>
+      <div class="stat"><div class="stat-label">RECORDS</div><div class="stat-value"><span class="counter" data-to="19">0</span>+</div></div>
+    </div>
+  </div>
+</header>
+
+<section id="pipeline" class="pipeline-section">
+  <div class="section-head">
+    <h2>What the terminal gives you</h2>
+    <span class="sec-note">// four capabilities. one connection string.</span>
+  </div>
+  <div class="pipeline-grid">
+    <a class="mission-card pop" style="--d:0ms" href="#console">
+      <div class="fnum">01/04</div>
+      <div class="mtag">T1</div>
+      <h3>TERMINAL</h3>
+      <p>Interactive SQL&gt; shell with ↑/↓ history, Tab completion for DESC and Ctrl+L to clear.</p>
+      <div class="mmeta">LIVE EXECUTION</div>
+      <div class="arrow" aria-hidden="true">▸</div>
+    </a>
+    <a class="mission-card pop" style="--d:90ms" href="#schemaPanel">
+      <div class="fnum">02/04</div>
+      <div class="mtag">T2</div>
+      <h3>SCHEMA</h3>
+      <p>All 14 relations browsable with column types and primary keys, one click to insert.</p>
+      <div class="mmeta">ER-MODEL EXACT</div>
+      <div class="arrow" aria-hidden="true">▸</div>
+    </a>
+    <a class="mission-card pop" style="--d:180ms" href="#samplesPanel">
+      <div class="fnum">03/04</div>
+      <div class="mtag">T3</div>
+      <h3>PRESETS</h3>
+        <p>100+ SQL commands: DDL, DML, joins, subqueries, window functions, and lab exercises.</p>
+      <div class="mmeta">ONE CLICK RUN</div>
+      <div class="arrow" aria-hidden="true">▸</div>
+    </a>
+    <a class="mission-card pop" style="--d:270ms" href="#console">
+      <div class="fnum">04/04</div>
+      <div class="mtag">T4</div>
+      <h3>REPORTING</h3>
+      <p>Run analytical queries with window functions, CTEs, and aggregations directly on live data.</p>
+      <div class="mmeta">ANALYTICS READY</div>
+    </a>
+  </div>
+</section>
+
+<main id="console" class="console-section">
+  <div class="section-head">
+    <h2>Console</h2>
+    <span class="sec-note">// SELECT · INSERT · UPDATE · DELETE · DDL</span>
+  </div>
+
+  <div class="layout">
+    <aside class="side">
+      <section id="schemaPanel" class="panel">
+        <div class="panel-head">
+          <h2>Schema</h2>
+          <input id="schemaFilter" type="text" placeholder="Filter tables…" autocomplete="off" />
+        </div>
+        <div id="schemaTree" class="schema-tree"><div class="t-muted">loading…</div></div>
+      </section>
+
+      <section id="samplesPanel" class="panel">
+        <div class="panel-head"><h2>Preset Queries</h2></div>
+        <div id="samplesList" class="samples"></div>
+      </section>
+    </aside>
+
+    <section class="terminal" id="terminal">
+      <div class="terminal-head">
+        <span class="tdot red"></span><span class="tdot amber"></span><span class="tdot green"></span>
+        <span class="terminal-title" id="termTitle">sqlplus — connecting…</span>
+        <button id="clearBtn" class="ghost-btn" title="Ctrl+L">Clear</button>
+      </div>
+      <div id="termOut" class="terminal-body"></div>
+      <div class="terminal-input-row">
+        <span class="prompt accent">SQL&gt;</span>
+        <input id="termIn" type="text" autocomplete="off" spellcheck="false"
+               placeholder="SELECT * FROM VW_ALUMNI_DIRECTORY;" />
+      </div>
+    </section>
+  </div>
+</main>
+
+<section class="cta-band">
+  <h2>The console is running.</h2>
+  <p>Database connected · no setup required.</p>
+  <a class="btn-solid glow" href="#console">OPEN CONSOLE →</a>
+</section>
+
+<footer>
+  <span>Alumni Network &amp; Engagement Platform</span>
+  <span class="f-mid">SQL · DML · SQLITE · FLASK</span>
+  <span>DBMS PROJECT</span>
+</footer>
+
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
