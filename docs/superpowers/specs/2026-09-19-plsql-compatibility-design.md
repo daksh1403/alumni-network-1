@@ -121,19 +121,21 @@ The interpreter will enforce configurable defaults:
 
 No user text is converted into JavaScript source. No `eval`, `new Function`, dynamic imports, or arbitrary host calls are permitted.
 
-## Frontend and documentation
+## Frontend boundary and documentation
 
-Reuse the current editor and Run action. Add an automatically detected `Mode: SQL` / `Mode: PL/SQL` indicator, a DBMS Output section, and a compatibility notice. Add presets for the requested 14 PL/SQL examples. Update README documentation with supported and limited syntax, architecture, migration setup, security limits, and copy-paste acceptance examples.
+No frontend files will be modified. The existing editor, Run action, presets, styling, and browser behavior remain unchanged. The backend will expose PL/SQL results through the `/api/query` JSON response, including `kind`, `message`, `output`, and affected-row metadata, so a future frontend change can render DBMS Output without coupling the interpreter to the UI.
+
+Backend documentation will describe supported and limited syntax, architecture, migration setup, security limits, and copy-paste acceptance examples. Frontend presets and mode indicators are explicitly deferred.
 
 ## Testing strategy
 
 Use test-first development with a fake D1 adapter for deterministic Worker tests. Cover:
 
-- detector, tokenizer, parser, expressions, scopes, and every requested statement form;
+- detector, tokenizer, parser, expressions, scopes, and every requested backend statement form;
 - output, loops, exceptions, SQL/DML, `SELECT INTO`, procedures, functions, cursors, and triggers;
 - invalid syntax, undeclared variables, unsupported features, row cardinality errors, and safety limits;
 - unchanged SQL behavior for SELECT, INSERT, UPDATE, DELETE, DDL, joins, CTEs, and window queries;
-- API response shape and frontend preset/mode integration.
+- API response shape without requiring frontend changes.
 
 The live D1 deployment is not required for unit tests, but migration SQL will be checked for required tables and the target Worker API will be smoke-tested when credentials/bindings are available.
 
