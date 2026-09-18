@@ -62,7 +62,7 @@ export function tokenize(source) {
       continue;
     }
 
-    const number = source.slice(i).match(/^(?:\d+(?:\.\d*)?|\.\d+)/);
+    const number = source.slice(i).match(/^(?:\d+\.\d+|\d+|\.\d+)/);
     if (number) {
       advance(number[0].length);
       add("number", Number(number[0]), startLine, startColumn, number[0]);
