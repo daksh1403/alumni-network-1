@@ -436,3 +436,213 @@ footer {
 @media (max-width: 640px) {
   .pipeline-grid { grid-template-columns: 1fr; }
 }
+/* =========================================================
+   DATABASE CRUD UI
+   ========================================================= */
+
+.crud-section {
+  padding: 80px 5vw;
+}
+
+.crud-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+  gap: 24px;
+  margin-top: 30px;
+}
+
+.crud-form-panel,
+.crud-sql-panel {
+  min-width: 0;
+}
+
+.crud-panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 22px 24px;
+  border-bottom: 1px solid var(--line, rgba(255,255,255,.1));
+}
+
+.crud-panel-head h3 {
+  margin: 8px 0 0;
+  font-size: 22px;
+}
+
+.crud-badge {
+  display: inline-block;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  padding: 5px 9px;
+  border: 1px solid currentColor;
+  color: var(--accent, #00ff9c);
+}
+
+.crud-tabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.crud-tab {
+  border: 1px solid var(--line, rgba(255,255,255,.15));
+  background: transparent;
+  color: inherit;
+  padding: 8px 13px;
+  font-family: inherit;
+  font-size: 11px;
+  letter-spacing: 1px;
+  cursor: pointer;
+}
+
+.crud-tab:hover,
+.crud-tab.active {
+  background: var(--accent, #00ff9c);
+  color: #000;
+  border-color: var(--accent, #00ff9c);
+}
+
+.crud-table-select {
+  padding: 22px 24px 10px;
+}
+
+.crud-table-select label,
+.crud-field label {
+  display: block;
+  margin-bottom: 7px;
+  font-size: 11px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  opacity: .75;
+}
+
+.crud-table-select select,
+.crud-field input,
+.crud-field select {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--line, rgba(255,255,255,.15));
+  background: rgba(0,0,0,.25);
+  color: inherit;
+  padding: 11px 12px;
+  font-family: inherit;
+  font-size: 13px;
+  outline: none;
+}
+
+.crud-table-select select:focus,
+.crud-field input:focus,
+.crud-field select:focus {
+  border-color: var(--accent, #00ff9c);
+}
+
+.crud-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  padding: 16px 24px 22px;
+}
+
+.crud-field {
+  min-width: 0;
+}
+
+.crud-field:has(select),
+.crud-field:has(input) {
+  min-width: 0;
+}
+
+.crud-actions {
+  display: flex;
+  gap: 10px;
+  padding: 0 24px 22px;
+}
+
+.crud-actions button,
+.crud-execute {
+  cursor: pointer;
+}
+
+.crud-message {
+  min-height: 20px;
+  padding: 0 24px 18px;
+  font-size: 12px;
+}
+
+.crud-message.error {
+  color: #ff6b6b;
+}
+
+.crud-message.success {
+  color: var(--accent, #00ff9c);
+}
+
+.crud-sql-panel {
+  padding-bottom: 22px;
+}
+
+.crud-sql-panel .panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sql-status {
+  font-size: 10px;
+  letter-spacing: 1px;
+  opacity: .65;
+}
+
+.crud-sql {
+  margin: 0 20px 18px;
+  min-height: 180px;
+  padding: 18px;
+  box-sizing: border-box;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  border: 1px solid var(--line, rgba(255,255,255,.1));
+  background: rgba(0,0,0,.3);
+  color: var(--accent, #00ff9c);
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.crud-execute {
+  margin: 0 20px 18px;
+}
+
+.crud-result {
+  margin: 0 20px;
+  padding: 13px 15px;
+  border: 1px solid var(--line, rgba(255,255,255,.1));
+  font-size: 12px;
+  min-height: 20px;
+}
+
+.crud-result.success {
+  border-color: var(--accent, #00ff9c);
+}
+
+.crud-result.error {
+  border-color: #ff6b6b;
+  color: #ff6b6b;
+}
+
+@media (max-width: 900px) {
+  .crud-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 650px) {
+  .crud-form {
+    grid-template-columns: 1fr;
+  }
+
+  .crud-panel-head {
+    flex-direction: column;
+  }
+}

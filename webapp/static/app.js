@@ -787,3 +787,841 @@ boot();
   }, { threshold: 0.4 });
   counters.forEach((c) => io.observe(c));
 })();
+/* =========================================================
+   DATABASE OPERATIONS / CRUD
+   ========================================================= */
+
+const CRUD_CONFIG = {
+  ALUMNI: {
+    label: "Alumni",
+    key: "AlumniID",
+    fields: [
+      { name: "AlumniID", label: "Alumni ID", type: "number", required: true, key: true },
+      { name: "FirstName", label: "First Name", type: "text", required: true },
+      { name: "LastName", label: "Last Name", type: "text" },
+      { name: "Email", label: "Email", type: "email", required: true },
+      { name: "DateOfBirth", label: "Date of Birth", type: "date" },
+      { name: "Address", label: "Address", type: "text" },
+
+      {
+        name: "DeptID",
+        label: "Department",
+        type: "foreign",
+        foreignTable: "DEPARTMENT",
+        foreignKey: "DeptID",
+        foreignLabel: "DeptName"
+      },
+
+      {
+        name: "BatchID",
+        label: "Batch",
+        type: "foreign",
+        foreignTable: "BATCH",
+        foreignKey: "BatchID",
+        foreignLabel: "BatchYear"
+      },
+
+      {
+        name: "CompanyID",
+        label: "Company",
+        type: "foreign",
+        foreignTable: "COMPANY",
+        foreignKey: "CompanyID",
+        foreignLabel: "CompanyName"
+      },
+
+      { name: "CurrentPosition", label: "Current Position", type: "text" },
+      { name: "LinkedInProfile", label: "LinkedIn Profile", type: "text" },
+      { name: "IsActive", label: "Active", type: "number" }
+    ]
+  },
+
+  STUDENT: {
+    label: "Student",
+    key: "StudentID",
+    fields: [
+      { name: "StudentID", label: "Student ID", type: "text", required: true, key: true },
+      { name: "FirstName", label: "First Name", type: "text", required: true },
+      { name: "LastName", label: "Last Name", type: "text" },
+
+      {
+        name: "DeptID",
+        label: "Department",
+        type: "foreign",
+        foreignTable: "DEPARTMENT",
+        foreignKey: "DeptID",
+        foreignLabel: "DeptName"
+      },
+
+      {
+        name: "BatchID",
+        label: "Batch",
+        type: "foreign",
+        foreignTable: "BATCH",
+        foreignKey: "BatchID",
+        foreignLabel: "BatchYear"
+      },
+
+      { name: "EnrollmentYear", label: "Enrollment Year", type: "number" },
+      { name: "CurrentSemester", label: "Current Semester", type: "number" },
+      { name: "CGPA", label: "CGPA", type: "number" }
+    ]
+  },
+
+  COMPANY: {
+    label: "Company",
+    key: "CompanyID",
+    fields: [
+      { name: "CompanyID", label: "Company ID", type: "number", required: true, key: true },
+      { name: "CompanyName", label: "Company Name", type: "text", required: true },
+      { name: "Industry", label: "Industry", type: "text" },
+      { name: "CompanySize", label: "Company Size", type: "text" },
+      { name: "Website", label: "Website", type: "text" },
+      { name: "Headquarters", label: "Headquarters", type: "text" }
+    ]
+  },
+
+  EVENT: {
+    label: "Event",
+    key: "EventID",
+    fields: [
+      { name: "EventID", label: "Event ID", type: "number", required: true, key: true },
+      { name: "EventName", label: "Event Name", type: "text", required: true },
+      { name: "EventType", label: "Event Type", type: "text" },
+      { name: "EventDate", label: "Event Date", type: "date" },
+      { name: "Venue", label: "Venue", type: "text" },
+
+      {
+        name: "OrganizerID",
+        label: "Organizer",
+        type: "foreign",
+        foreignTable: "ALUMNI",
+        foreignKey: "AlumniID",
+        foreignLabel: "FirstName"
+      }
+    ]
+  },
+
+  JOB: {
+    label: "Job",
+    key: "JobID",
+    fields: [
+      { name: "JobID", label: "Job ID", type: "number", required: true, key: true },
+      { name: "JobTitle", label: "Job Title", type: "text", required: true },
+      { name: "JobType", label: "Job Type", type: "text" },
+      { name: "Salary", label: "Salary", type: "text" },
+
+      {
+        name: "CompanyID",
+        label: "Company",
+        type: "foreign",
+        foreignTable: "COMPANY",
+        foreignKey: "CompanyID",
+        foreignLabel: "CompanyName"
+      },
+
+      {
+        name: "PostedBy",
+        label: "Posted By",
+        type: "foreign",
+        foreignTable: "ALUMNI",
+        foreignKey: "AlumniID",
+        foreignLabel: "FirstName"
+      }
+    ]
+  }
+};
+
+let crudOperation = "add";
+
+
+function crudEscape(value) {
+  return String(value).replace(/'/g, "''");
+}
+
+
+function crudSQLValue(value, type) {
+  if (value === "" || value === null || value === undefined) {
+    return "NULL";
+  }
+
+  if (type === "number" || type === "foreign") {
+    return String(value);
+  }
+
+  return `'${crudEscape(value)}'`;
+}
+
+
+/* ---------- FETCH FOREIGN KEY DATA ---------- */
+
+async function crudFetchRows(sql) {
+  const r = await fetch(API + "/api/query", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ sql })
+  });
+
+  const j = await r.json();
+
+  if (!r.ok || j.error) {
+    throw new Error(j.error || "Request failed");
+  }
+
+  const columns = j.columns || [];
+  const rows = j.rows || [];
+
+  return rows.map((row) => {
+    if (!Array.isArray(row)) return row;
+
+    const obj = {};
+
+    columns.forEach((column, index) => {
+      obj[column] = row[index];
+    });
+
+    return obj;
+  });
+}
+
+
+/* ---------- CREATE FORM FIELD ---------- */
+
+async function createCrudField(field) {
+
+  const wrapper = document.createElement("div");
+  wrapper.className = "crud-field";
+
+  const label = document.createElement("label");
+  label.textContent =
+    field.label + (field.required ? " *" : "");
+
+  let input;
+
+
+  /* FOREIGN KEY */
+
+  if (field.type === "foreign") {
+
+    input = document.createElement("select");
+
+    input.innerHTML =
+      `<option value="">Select ${field.label}...</option>`;
+
+    try {
+
+      let sql;
+
+      if (field.foreignTable === "DEPARTMENT") {
+
+        sql =
+          `SELECT DeptID, DeptName
+           FROM DEPARTMENT
+           ORDER BY DeptID`;
+
+      }
+
+      else if (field.foreignTable === "BATCH") {
+
+        sql =
+          `SELECT BatchID, BatchYear, Section
+           FROM BATCH
+           ORDER BY BatchID`;
+
+      }
+
+      else if (field.foreignTable === "COMPANY") {
+
+        sql =
+          `SELECT CompanyID, CompanyName
+           FROM COMPANY
+           ORDER BY CompanyID`;
+
+      }
+
+      else if (field.foreignTable === "ALUMNI") {
+
+        sql =
+          `SELECT AlumniID, FirstName, LastName
+           FROM ALUMNI
+           ORDER BY AlumniID`;
+
+      }
+
+      const rows = await crudFetchRows(sql);
+
+      rows.forEach((row) => {
+
+        const option =
+          document.createElement("option");
+
+        option.value =
+          row[field.foreignKey];
+
+        let labelText = "";
+
+        if (field.foreignTable === "DEPARTMENT") {
+
+          labelText =
+            `${row.DeptID} — ${row.DeptName}`;
+
+        }
+
+        else if (field.foreignTable === "BATCH") {
+
+          labelText =
+            `${row.BatchID} — ${row.BatchYear}${
+              row.Section ? `-${row.Section}` : ""
+            }`;
+
+        }
+
+        else if (field.foreignTable === "COMPANY") {
+
+          labelText =
+            `${row.CompanyID} — ${row.CompanyName}`;
+
+        }
+
+        else if (field.foreignTable === "ALUMNI") {
+
+          labelText =
+            `${row.AlumniID} — ${row.FirstName || ""} ${
+              row.LastName || ""
+            }`.trim();
+
+        }
+
+        option.textContent = labelText;
+
+        input.appendChild(option);
+      });
+
+    }
+
+    catch (err) {
+
+      console.error("Dropdown error:", err);
+
+    }
+
+  }
+
+
+  /* NORMAL INPUT */
+
+  else {
+
+    input = document.createElement("input");
+
+    input.type =
+      field.type === "date"
+        ? "date"
+        : field.type === "number"
+          ? "number"
+          : field.type === "email"
+            ? "email"
+            : "text";
+  }
+
+
+  input.id = `crud_${field.name}`;
+  input.name = field.name;
+
+  if (field.required) {
+    input.required = true;
+  }
+
+  wrapper.appendChild(label);
+  wrapper.appendChild(input);
+
+  return wrapper;
+}
+
+
+/* ---------- RENDER FORM ---------- */
+
+async function renderCrudForm() {
+
+  const tableName =
+    $("crudTable").value;
+
+  const cfg =
+    CRUD_CONFIG[tableName];
+
+  const form =
+    $("crudForm");
+
+  if (!cfg) return;
+
+  form.innerHTML = "";
+
+
+  const panel =
+    document.querySelector(".crud-form-panel");
+
+  if (panel) {
+
+    const heading =
+      panel.querySelector("h3");
+
+    if (heading) {
+
+      heading.textContent =
+        crudOperation === "add"
+          ? `Add ${cfg.label}`
+          : crudOperation === "update"
+            ? `Update ${cfg.label}`
+            : `Delete ${cfg.label}`;
+    }
+
+    const badge =
+      panel.querySelector(".crud-badge");
+
+    if (badge) {
+      badge.textContent = tableName;
+    }
+  }
+
+
+  /* DELETE */
+
+  if (crudOperation === "delete") {
+
+    const keyField =
+      cfg.fields.find(
+        (field) => field.key === true
+      );
+
+    if (keyField) {
+      form.appendChild(
+        await createCrudField(keyField)
+      );
+    }
+
+    return;
+  }
+
+
+  /* UPDATE */
+
+  if (crudOperation === "update") {
+
+    const keyField =
+      cfg.fields.find(
+        (field) => field.key === true
+      );
+
+    if (keyField) {
+
+      form.appendChild(
+        await createCrudField(keyField)
+      );
+    }
+
+
+    const fieldWrapper =
+      document.createElement("div");
+
+    fieldWrapper.className =
+      "crud-field";
+
+    const fieldLabel =
+      document.createElement("label");
+
+    fieldLabel.textContent =
+      "Field to Update";
+
+
+    const fieldSelect =
+      document.createElement("select");
+
+    fieldSelect.id =
+      "crudUpdateField";
+
+    fieldSelect.innerHTML =
+      `<option value="">Select field...</option>`;
+
+
+    cfg.fields
+      .filter((field) => !field.key)
+      .forEach((field) => {
+
+        const option =
+          document.createElement("option");
+
+        option.value =
+          field.name;
+
+        option.textContent =
+          field.label;
+
+        fieldSelect.appendChild(option);
+      });
+
+
+    fieldWrapper.appendChild(fieldLabel);
+    fieldWrapper.appendChild(fieldSelect);
+
+    form.appendChild(fieldWrapper);
+
+
+    const valueWrapper =
+      document.createElement("div");
+
+    valueWrapper.className =
+      "crud-field";
+
+    valueWrapper.id =
+      "crudUpdateValueWrapper";
+
+    form.appendChild(valueWrapper);
+
+
+    fieldSelect.addEventListener(
+      "change",
+      async () => {
+
+        valueWrapper.innerHTML = "";
+
+        const field =
+          cfg.fields.find(
+            (f) => f.name === fieldSelect.value
+          );
+
+        if (!field) return;
+
+        const fieldElement =
+          await createCrudField(field);
+
+        const input =
+          fieldElement.querySelector(
+            "input, select"
+          );
+
+        if (input) {
+          input.id = "crudUpdateValue";
+        }
+
+        valueWrapper.appendChild(fieldElement);
+      }
+    );
+
+    return;
+  }
+
+
+  /* ADD */
+
+  for (const field of cfg.fields) {
+
+    form.appendChild(
+      await createCrudField(field)
+    );
+  }
+}
+
+
+/* ---------- GENERATE SQL ---------- */
+
+function generateCrudSQL() {
+
+  const tableName =
+    $("crudTable").value;
+
+  const cfg =
+    CRUD_CONFIG[tableName];
+
+  if (!cfg) return null;
+
+
+  /* DELETE */
+
+  if (crudOperation === "delete") {
+
+    const keyField =
+      cfg.fields.find(
+        (field) => field.key === true
+      );
+
+    const input =
+      $(`crud_${keyField.name}`);
+
+    if (!input || !input.value) {
+      throw new Error(
+        `${keyField.name} is required.`
+      );
+    }
+
+    return `DELETE FROM ${tableName} WHERE ${
+      keyField.name
+    } = ${
+      crudSQLValue(
+        input.value,
+        keyField.type
+      )
+    };`.trim();
+  }
+
+
+  /* UPDATE */
+
+  if (crudOperation === "update") {
+
+    const keyField =
+      cfg.fields.find(
+        (field) => field.key === true
+      );
+
+    const keyInput =
+      $(`crud_${keyField.name}`);
+
+    if (!keyInput || !keyInput.value) {
+      throw new Error(
+        `${keyField.name} is required.`
+      );
+    }
+
+    const fieldName =
+      $("crudUpdateField").value;
+
+    if (!fieldName) {
+      throw new Error(
+        "Select a field to update."
+      );
+    }
+
+    const field =
+      cfg.fields.find(
+        (f) => f.name === fieldName
+      );
+
+    const valueInput =
+      $("crudUpdateValue");
+
+    if (!valueInput) {
+      throw new Error(
+        "Enter a new value."
+      );
+    }
+
+    return `UPDATE ${tableName} SET ${
+      field.name
+    } = ${
+      crudSQLValue(
+        valueInput.value,
+        field.type
+      )
+    } WHERE ${
+      keyField.name
+    } = ${
+      crudSQLValue(
+        keyInput.value,
+        keyField.type
+      )
+    };`.trim();
+  }
+
+
+  /* ADD */
+
+  const columns = [];
+  const values = [];
+
+  for (const field of cfg.fields) {
+
+    const input =
+      $(`crud_${field.name}`);
+
+    if (!input) continue;
+
+    if (
+      field.required &&
+      !input.value
+    ) {
+
+      throw new Error(
+        `${field.name} is required.`
+      );
+    }
+
+    columns.push(field.name);
+
+    values.push(
+      crudSQLValue(
+        input.value,
+        field.type
+      )
+    );
+  }
+
+  return `INSERT INTO ${tableName} (${
+    columns.join(", ")
+  }) VALUES (${
+    values.join(", ")
+  });`.trim();
+}
+
+
+/* ---------- CRUD BUTTONS ---------- */
+
+document
+  .querySelectorAll(".crud-tab")
+  .forEach((button) => {
+
+    button.addEventListener("click", () => {
+
+      document
+        .querySelectorAll(".crud-tab")
+        .forEach((b) =>
+          b.classList.remove("active")
+        );
+
+      button.classList.add("active");
+
+      crudOperation =
+        button.dataset.operation;
+
+      renderCrudForm();
+    });
+  });
+
+
+/* ---------- TABLE CHANGE ---------- */
+
+$("crudTable").addEventListener(
+  "change",
+  () => {
+    renderCrudForm();
+  }
+);
+
+
+/* ---------- PREVIEW SQL ---------- */
+
+$("generateCrudBtn").addEventListener(
+  "click",
+  () => {
+
+    const result =
+      $("crudResult");
+
+    try {
+
+      const sql =
+        generateCrudSQL();
+
+      $("crudSql").textContent =
+        sql;
+
+      result.textContent =
+        "SQL generated successfully.";
+
+      result.className =
+        "crud-result success";
+
+    }
+
+    catch (err) {
+
+      $("crudSql").textContent =
+        '-- Fill the form and click\n' +
+        '-- "PREVIEW SQL" to generate a query.';
+
+      result.textContent =
+        err.message;
+
+      result.className =
+        "crud-result error";
+    }
+  }
+);
+
+
+/* ---------- RESET ---------- */
+
+$("resetCrudBtn").addEventListener(
+  "click",
+  () => {
+
+    renderCrudForm();
+
+    $("crudSql").textContent =
+      '-- Fill the form and click\n' +
+      '-- "PREVIEW SQL" to generate a query.';
+
+    $("crudResult").textContent =
+      "Query results will appear here.";
+  }
+);
+
+
+/* ---------- EXECUTE SQL ---------- */
+
+$("executeCrudBtn").addEventListener(
+  "click",
+  async () => {
+
+    const sql =
+      $("crudSql").textContent.trim();
+
+    if (!sql || sql.startsWith("--")) {
+
+      $("crudResult").textContent =
+        "Generate SQL first.";
+
+      return;
+    }
+
+    try {
+
+      const r =
+        await fetch(
+          API + "/api/query",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type":
+                "application/json"
+            },
+            body: JSON.stringify({ sql })
+          }
+        );
+
+      const j =
+        await r.json();
+
+      if (!r.ok || j.error) {
+
+        throw new Error(
+          j.error ||
+          "Execution failed"
+        );
+      }
+
+      $("crudResult").textContent =
+        j.message ||
+        "Query executed successfully.";
+
+      $("crudResult").className =
+        "crud-result success";
+
+    }
+
+    catch (err) {
+
+      $("crudResult").textContent =
+        err.message;
+
+      $("crudResult").className =
+        "crud-result error";
+    }
+  }
+);
+
+
+/* ---------- INITIAL CRUD FORM ---------- */
+
+renderCrudForm();

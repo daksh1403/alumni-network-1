@@ -128,7 +128,73 @@
     </section>
   </div>
 </main>
+<section id="crudPanel" class="crud-section">
+  <div class="section-head">
+    <h2>Database Operations</h2>
+    <span class="sec-note">// ADD · UPDATE · DELETE</span>
+  </div>
 
+  <div class="crud-grid">
+
+    <section class="panel crud-form-panel" id="crudFormPanel">
+
+      <div class="crud-panel-head">
+        <div>
+          <span class="crud-badge">ALUMNI</span>
+          <h3>Add Alumni</h3>
+        </div>
+
+        <div class="crud-tabs">
+          <button class="crud-tab active" data-operation="add">ADD</button>
+          <button class="crud-tab" data-operation="update">UPDATE</button>
+          <button class="crud-tab" data-operation="delete">DELETE</button>
+        </div>
+      </div>
+
+      <div class="crud-table-select">
+        <label for="crudTable">TABLE</label>
+        <select id="crudTable">
+          <option value="ALUMNI">ALUMNI</option>
+          <option value="STUDENT">STUDENT</option>
+          <option value="COMPANY">COMPANY</option>
+          <option value="EVENT">EVENT</option>
+          <option value="JOB">JOB</option>
+        </select>
+      </div>
+
+      <div id="crudForm" class="crud-form"></div>
+
+      <div class="crud-actions">
+        <button id="generateCrudBtn" class="btn-solid">PREVIEW SQL</button>
+        <button id="resetCrudBtn" class="btn-ghost">RESET</button>
+      </div>
+
+      <div id="crudMessage" class="crud-message"></div>
+
+    </section>
+
+    <section class="panel crud-sql-panel">
+
+      <div class="panel-head">
+        <h2>Generated SQL</h2>
+        <span id="sqlStatus" class="sql-status">WAITING</span>
+      </div>
+
+      <pre id="crudSql" class="crud-sql">-- Fill the form and click
+-- "PREVIEW SQL" to generate a query.</pre>
+
+      <button id="executeCrudBtn" class="btn-solid crud-execute">
+        EXECUTE SQL
+      </button>
+
+      <div id="crudResult" class="crud-result">
+        Query results will appear here.
+      </div>
+
+    </section>
+
+  </div>
+</section>
 <section class="cta-band">
   <h2>The console is running.</h2>
   <p>Database connected · no setup required.</p>
